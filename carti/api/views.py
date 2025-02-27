@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.decorators import api_view
@@ -36,6 +37,49 @@ def make_transaction(request):
 class BankAccountListCreate(generics.ListCreateAPIView):
     queryset = BankAccount.objects.all()
     serializer_class = BankAccountSerializer
+
+@api_view(['POST'])
+def transfer_funds(request):
+    """
+    Effectuer un virement d'un compte à un autre.
+    JSON attendu : {"from_account": "123456", "to_account": "654321", "amount": 50}
+    """
+    try:
+        from_account_number = request.data.get('from_account')
+        to_account_number = request.data.get('to_account')
+        amount = (request.data.get('amount'))
+
+        if amount <= 0:
+            return Response({"error": "Le montant doit être positif"}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():  # Assure que les opérations sont atomiques
+            from_account = BankAccount.objects.select_for_update().get(account_number=from_account_number)
+            to_account = BankAccount.objects.select_for_update().get(account_number=to_account_number)
+
+            if from_account.balance < amount:
+                return Response({"error": "Fonds insuffisants"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Effectuer le virement
+            from_account.balance -= amount
+            to_account.balance += amount
+
+            from_account.save()
+            to_account.save()
+
+        return Response({
+            "message": "Virement réussi",
+            "from_account": from_account_number,
+            "to_account": to_account_number,
+            "transferred_amount": amount,
+            "new_balance_from": from_account.balance,
+            "new_balance_to": to_account.balance
+        })
+
+    except BankAccount.DoesNotExist:
+        return Response({"error": "Un des comptes n'existe pas"}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def home(request):

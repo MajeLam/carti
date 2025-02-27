@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil - Simulation Banque</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 80%; margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Tableau de Bord Bancaire</h1>
+    <p><strong>Nombre de comptes :</strong> {{ num_accounts }}</p>
+    <p><strong>Comptes positifs :</strong> {{ num_positive }}</p>
+    <p><strong>Comptes négatifs :</strong> {{ num_negative }}</p>
+    <p><strong>Solde total :</strong> {{ total_balance }} €</p>
+
+    <h2>Derniers comptes créés</h2>
+    <table>
+        <tr>
+            <th>Numéro de compte</th>
+            <th>Propriétaire</th>
+            <th>Solde (€)</th>
+            <th>Devise</th>
+        </tr>
+        {% for account in accounts %}
+        <tr>
+            <td>{{ account.account_number }}</td>
+            <td>{{ account.owner }}</td>
+            <td {% if account.balance < 0 %}style="color:red"{% endif %}>
+                {{ account.balance }}
+            </td>
+            <td>{{ account.currency }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -63,13 +63,28 @@ Accède au tableau de bord : **http://127.0.0.1:8000/**
 | `POST`   | `/api/transaction/`                | Effectuer un dépôt ou retrait    |
 | `POST`   | `/api/accounts/`                   | Créer un compte bancaire         |
 
-Exemple d'une transaction en **cURL** :
+Ajout au solde montant positif ou retrait montant negatif en **cURL** :
 ```bash
 curl -X POST http://127.0.0.1:8000/api/transaction/ \
      -H "Content-Type: application/json" \
      -d '{"account_number": "123456", "amount": 100}'
 ```
-
+Consulter un solde **cURL** :
+```bash
+curl -X GET http://127.0.0.1:8000/api/balance/123456/
+```
+Créer un compte en **cURL** :
+```bash
+curl -X POST http://127.0.0.1:8000/api/accounts/ \
+     -H "Content-Type: application/json" \
+     -d '{"account_number": "654321", "owner": "Alice Martin", "balance": 1000, "currency": "USD"}'
+```
+Faire un virement en **cURL** :
+```bash
+curl -X POST http://127.0.0.1:8000/api/transfer/ \
+     -H "Content-Type: application/json" \
+     -d '{"from_account": "123456", "to_account": "654321", "amount": 50}'
+```
 ---
 
 ## 🎲 **Génération Automatique de Comptes**

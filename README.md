@@ -11,6 +11,7 @@ Carti est un simulateur d'API bancaire développé avec **Django** et **Django R
 ✔️ Transactions (dépôts et retraits)  
 ✔️ Génération automatique de comptes fictifs  
 ✔️ Tableau de bord interactif avec statistiques  
+✔️ Gestion des cartes bancaires (ajout, suppression, liste)  
 
 ---
 
@@ -50,42 +51,57 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 Accède à l'interface d’administration : **http://127.0.0.1:8000/admin/**  
-
 Accède au tableau de bord : **http://127.0.0.1:8000/**  
 
 ---
 
 ## 🔗 **Endpoints de l'API**
 
-| Méthode  | Endpoint                            | Description                       |
-|----------|------------------------------------|-----------------------------------|
-| `GET`    | `/api/accounts/`                   | Liste tous les comptes           |
-| `GET`    | `/api/balance/<account_number>/`   | Vérifier le solde d'un compte    |
-| `POST`   | `/api/transaction/`                | Effectuer un dépôt ou retrait    |
-| `POST`   | `/api/accounts/`                   | Créer un compte bancaire         |
+| Méthode  | Endpoint                                         | Description                                    |
+|----------|--------------------------------------------------|------------------------------------------------|
+| `GET`    | `/api/accounts/`                                  | Liste tous les comptes                         |
+| `GET`    | `/api/balance/<account_number>/`                   | Vérifier le solde d'un compte                   |
+| `POST`   | `/api/transaction/`                                | Effectuer un dépôt ou retrait                  |
+| `POST`   | `/api/accounts/`                                   | Créer un compte bancaire                       |
+| `GET`    | `/api/cards/<account_number>/`                     | Lister les cartes d'un compte                  |
+| `POST`   | `/api/add-card/`                                   | Ajouter une carte bancaire                    |
+| `DELETE` | `/api/delete-card/<card_number>/`                  | Supprimer une carte bancaire                  |
+| `POST`   | `/api/transfer/`                                   | Effectuer un virement entre comptes           |
 
-Ajout au solde montant positif ou retrait montant negatif en **cURL** :
+---
+
+## 💳 **Gestion des Cartes Bancaires**
+
+### 📌 **Exemples d'utilisation en `cURL`**
+
+#### ✅ **1. Lister les cartes d’un compte**
 ```bash
-curl -X POST http://127.0.0.1:8000/api/transaction/ \
-     -H "Content-Type: application/json" \
-     -d '{"account_number": "123456", "amount": 100}'
+curl -X GET http://127.0.0.1:8000/api/cards/123456/
 ```
-Consulter un solde **cURL** :
+
+#### ✅ **2. Ajouter une carte à un compte**
 ```bash
-curl -X GET http://127.0.0.1:8000/api/balance/123456/
+curl -X POST http://127.0.0.1:8000/api/add-card/      -H "Content-Type: application/json"      -d '{
+            "card_number": "1234567890123456",
+            "expiration_date": "2026-12-31",
+            "cvv": "123",
+            "account": 1
+         }'
 ```
-Créer un compte en **cURL** :
+
+#### ❌ **3. Supprimer une carte**
 ```bash
-curl -X POST http://127.0.0.1:8000/api/accounts/ \
-     -H "Content-Type: application/json" \
-     -d '{"account_number": "654321", "owner": "Alice Martin", "balance": 1000, "currency": "USD"}'
+curl -X DELETE http://127.0.0.1:8000/api/delete-card/1234567890123456/
 ```
-Faire un virement en **cURL** :
-```bash
-curl -X POST http://127.0.0.1:8000/api/transfer/ \
-     -H "Content-Type: application/json" \
-     -d '{"from_account": "123456", "to_account": "654321", "amount": 50}'
-```
+
+---
+
+## 🔒 **Sécurité et Améliorations**
+
+- 🔐 **Masquer les CVV** dans les réponses pour plus de sécurité.  
+- 🛡️ **Ajouter une authentification** (par exemple JWT) pour sécuriser l'accès aux endpoints.  
+- 📅 **Gérer l'expiration** des cartes automatiquement.  
+
 ---
 
 ## 🎲 **Génération Automatique de Comptes**
@@ -97,23 +113,11 @@ Cela créera **10 comptes aléatoires**.
 
 ---
 
-## 🎨 **Interface Web (Tableau de Bord)**
-Le projet inclut une interface web accessible à :  
-👉 **http://127.0.0.1:8000/**  
-
-Elle affiche :
-- 📊 **Nombre de comptes créés**
-- ✅ **Comptes positifs / négatifs**
-- 💰 **Total des soldes**
-- 📋 **Liste des derniers comptes créés**
-
----
-
 ## 🏗️ **Améliorations Possibles**
-- 🔐 **Sécurisation avec authentification JWT**
-- 📊 **Ajout de graphiques avec Chart.js**
-- 🔄 **Transactions entre comptes**
-- 📅 **Historique des transactions**
+
+- 📊 **Tableau de bord amélioré** avec un historique des transactions par carte.  
+- 📅 **Rappels pour les expirations** de cartes bancaires.  
+- 🔄 **Système de transfert inter-comptes** optimisé.  
 
 ---
 

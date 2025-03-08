@@ -3,8 +3,33 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.decorators import api_view
-from .models import BankAccount
-from .serializers import BankAccountSerializer
+from .models import BankAccount, CreditCard
+from .serializers import BankAccountSerializer, CreditCardSerializer
+
+
+
+
+##################Home####################
+
+def home(request):
+    accounts = BankAccount.objects.all().order_by('-id')
+    total_balance = sum(account.balance for account in accounts)
+    num_accounts = BankAccount.objects.count()
+    num_positive = BankAccount.objects.filter(balance__gt=0).count()
+    num_negative = BankAccount.objects.filter(balance__lt=0).count()
+
+    context = {
+        'accounts': accounts,
+        'total_balance': total_balance,
+        'num_accounts': num_accounts,
+        'num_positive': num_positive,
+        'num_negative': num_negative,
+    }
+    return render(request, 'home.html', context)
+
+
+
+##################Bank Account####################
 
 @api_view(['GET'])
 def get_balance(request, account_number):
@@ -82,18 +107,33 @@ def transfer_funds(request):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def home(request):
-    accounts = BankAccount.objects.all().order_by('-id')
-    total_balance = sum(account.balance for account in accounts)
-    num_accounts = BankAccount.objects.count()
-    num_positive = BankAccount.objects.filter(balance__gt=0).count()
-    num_negative = BankAccount.objects.filter(balance__lt=0).count()
 
-    context = {
-        'accounts': accounts,
-        'total_balance': total_balance,
-        'num_accounts': num_accounts,
-        'num_positive': num_positive,
-        'num_negative': num_negative,
-    }
-    return render(request, 'home.html', context)
+
+###############credit card######################
+
+@api_view(['GET'])
+def list_cards(request, account_number):
+    try:
+        account = BankAccount.objects.get(account_number=account_number)
+        cards = CreditCard.objects.filter(account=account)
+        serializer = CreditCardSerializer(cards, many=True)
+        return Response(serializer.data)
+    except BankAccount.DoesNotExist:
+        return Response({"error": "Compte introuvable"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+def add_card(request):
+    serializer = CreditCardSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_card(request, card_number):
+    try:
+        card = CreditCard.objects.get(card_number=card_number)
+        card.delete()
+        return Response({"message": "Carte supprimée avec succès"}, status=status.HTTP_204_NO_CONTENT)
+    except CreditCard.DoesNotExist:
+        return Response({"error": "Carte introuvable"}, status=status.HTTP_404_NOT_FOUND)

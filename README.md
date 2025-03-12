@@ -96,14 +96,6 @@ curl -X DELETE http://127.0.0.1:8000/api/delete-card/1234567890123456/
 
 ---
 
-## 🔒 **Sécurité et Améliorations**
-
-- 🔐 **Masquer les CVV** dans les réponses pour plus de sécurité.  
-- 🛡️ **Ajouter une authentification** (par exemple JWT) pour sécuriser l'accès aux endpoints.  
-- 📅 **Gérer l'expiration** des cartes automatiquement.  
-
----
-
 ## 🎲 **Génération Automatique de Comptes**
 Pour générer des comptes fictifs avec des soldes positifs et négatifs :
 ```bash
@@ -112,17 +104,3 @@ python manage.py create_fake_accounts 10
 Cela créera **10 comptes aléatoires**.
 
 ---
-
-## 🏗️ **Améliorations Possibles**
-
-- 📊 **Tableau de bord amélioré** avec un historique des transactions par carte.  
-- 📅 **Rappels pour les expirations** de cartes bancaires.  
-- 🔄 **Système de transfert inter-comptes** optimisé.  
-
----
-
-## 📜 **Licence**
-Ce projet est sous licence **MIT**.  
-
-📩 **Développeur : [Ton Nom]**  
-💻 **Contact : [ton-email@example.com]**  

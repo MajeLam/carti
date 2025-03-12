@@ -70,16 +70,34 @@ Accède au tableau de bord : **http://127.0.0.1:8000/**
 
 ---
 
-## 💳 **Gestion des Cartes Bancaires**
+## 📌 **Exemples d'utilisation en `cURL`**
 
-### 📌 **Exemples d'utilisation en `cURL`**
+### ✅ **1. Créer un compte bancaire**
+```bash
+curl -X POST http://127.0.0.1:8000/api/accounts/      -H "Content-Type: application/json"      -d '{"account_number": "654321", "owner": "Alice Martin", "balance": 1000, "currency": "USD"}'
+```
 
-#### ✅ **1. Lister les cartes d’un compte**
+### ✅ **2. Vérifier le solde d’un compte**
+```bash
+curl -X GET http://127.0.0.1:8000/api/balance/123456/
+```
+
+### ✅ **3. Effectuer une transaction (dépôt ou retrait)**
+```bash
+curl -X POST http://127.0.0.1:8000/api/transaction/      -H "Content-Type: application/json"      -d '{"account_number": "123456", "amount": 100}'
+```
+
+### ✅ **4. Effectuer un virement entre comptes**
+```bash
+curl -X POST http://127.0.0.1:8000/api/transfer/      -H "Content-Type: application/json"      -d '{"from_account": "123456", "to_account": "654321", "amount": 50}'
+```
+
+### ✅ **5. Lister les cartes d’un compte**
 ```bash
 curl -X GET http://127.0.0.1:8000/api/cards/123456/
 ```
 
-#### ✅ **2. Ajouter une carte à un compte**
+### ✅ **6. Ajouter une carte à un compte**
 ```bash
 curl -X POST http://127.0.0.1:8000/api/add-card/      -H "Content-Type: application/json"      -d '{
             "card_number": "1234567890123456",
@@ -89,18 +107,10 @@ curl -X POST http://127.0.0.1:8000/api/add-card/      -H "Content-Type: applicat
          }'
 ```
 
-#### ❌ **3. Supprimer une carte**
+### ❌ **7. Supprimer une carte**
 ```bash
 curl -X DELETE http://127.0.0.1:8000/api/delete-card/1234567890123456/
 ```
-
----
-
-## 🔒 **Sécurité et Améliorations**
-
-- 🔐 **Masquer les CVV** dans les réponses pour plus de sécurité.  
-- 🛡️ **Ajouter une authentification** (par exemple JWT) pour sécuriser l'accès aux endpoints.  
-- 📅 **Gérer l'expiration** des cartes automatiquement.  
 
 ---
 
@@ -113,16 +123,3 @@ Cela créera **10 comptes aléatoires**.
 
 ---
 
-## 🏗️ **Améliorations Possibles**
-
-- 📊 **Tableau de bord amélioré** avec un historique des transactions par carte.  
-- 📅 **Rappels pour les expirations** de cartes bancaires.  
-- 🔄 **Système de transfert inter-comptes** optimisé.  
-
----
-
-## 📜 **Licence**
-Ce projet est sous licence **MIT**.  
-
-📩 **Développeur : [Ton Nom]**  
-💻 **Contact : [ton-email@example.com]**  

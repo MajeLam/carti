@@ -1,1 +1,1 @@
-web: gunicorn carti.wsgi:application 
+web: gunicorn carti.carti.wsgi:application 

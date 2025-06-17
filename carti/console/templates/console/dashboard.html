@@ -1,0 +1,246 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+    .log-entry {
+        transition: background-color 0.2s;
+    }
+    .log-entry:hover {
+        background-color: #f8f9fa;
+    }
+    .status-badge {
+        font-size: 0.8em;
+        padding: 0.25em 0.5em;
+    }
+    .chart-container {
+        height: 300px;
+    }
+    .operation-card {
+        border-left: 4px solid #007bff;
+    }
+    .operation-card.pending {
+        border-left-color: #ffc107;
+    }
+    .operation-card.in-progress {
+        border-left-color: #17a2b8;
+    }
+    .operation-card.completed {
+        border-left-color: #28a745;
+    }
+    .operation-card.failed {
+        border-left-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête avec statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Requêtes</h5>
+                    <h2 class="card-text">{{ stats.total_requests }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Taux de Succès</h5>
+                    <h2 class="card-text">{{ stats.success_rate|floatformat:1 }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Taux d'Erreur</h5>
+                    <h2 class="card-text">{{ stats.error_rate|floatformat:1 }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Temps de Réponse Moyen</h5>
+                    <h2 class="card-text">{{ stats.avg_response_time|floatformat:0 }}ms</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="startDate" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="startDate" name="start_date" value="{{ start_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="endDate" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="endDate" name="end_date" value="{{ end_date }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchQuery" class="form-label">Recherche</label>
+                            <input type="text" class="form-control" id="searchQuery" name="q" placeholder="Rechercher dans les logs...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des logs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Logs des Requêtes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date/Heure</th>
+                                    <th>Méthode</th>
+                                    <th>Endpoint</th>
+                                    <th>Statut</th>
+                                    <th>Temps</th>
+                                    <th>Utilisateur</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr class="log-entry">
+                                    <td>{{ log.timestamp|date:"d/m/Y H:i:s" }}</td>
+                                    <td><span class="badge bg-{{ log.method|lower }}">{{ log.method }}</span></td>
+                                    <td>{{ log.endpoint }}</td>
+                                    <td>
+                                        <span class="badge {% if log.status_code < 400 %}bg-success{% elif log.status_code < 500 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ log.status_code }}
+                                        </span>
+                                    </td>
+                                    <td>{{ log.response_time|floatformat:0 }}ms</td>
+                                    <td>{{ log.user.username|default:"-" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="showLogDetails('{{ log.id }}')">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if logs.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if logs.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ logs.previous_page_number }}">Précédent</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in logs.paginator.page_range %}
+                            <li class="page-item {% if logs.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ logs.next_page_number }}">Suivant</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les détails du log -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de la Requête</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Requête</h6>
+                        <pre id="requestData" class="bg-light p-3 rounded"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Réponse</h6>
+                        <pre id="responseData" class="bg-light p-3 rounded"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function showLogDetails(logId) {
+    fetch(`/api/console/logs/${logId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('requestData').textContent = JSON.stringify(data.request_data, null, 2);
+            document.getElementById('responseData').textContent = JSON.stringify(data.response_data, null, 2);
+            new bootstrap.Modal(document.getElementById('logDetailsModal')).show();
+        });
+}
+
+// Mise à jour automatique des opérations
+function updateOperations() {
+    fetch('/api/console/operations/')
+        .then(response => response.json())
+        .then(data => {
+            const operationsContainer = document.getElementById('activeOperations');
+            if (operationsContainer) {
+                operationsContainer.innerHTML = data.operations.map(op => `
+                    <div class="card operation-card ${op.status.toLowerCase()} mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0">${op.operation_type}</h6>
+                                <span class="badge bg-${op.status === 'COMPLETED' ? 'success' : 'primary'}">${op.status}</span>
+                            </div>
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div class="progress-bar" role="progressbar" style="width: ${op.progress}%"></div>
+                            </div>
+                            <small class="text-muted">${op.message}</small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        });
+}
+
+// Mise à jour toutes les 5 secondes
+setInterval(updateOperations, 5000);
+</script>
+{% endblock %} 

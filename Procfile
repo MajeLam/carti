@@ -1,1 +1,1 @@
-web: gunicorn carti.carti.wsgi:application 
+web: cd carti && gunicorn carti.wsgi:application --bind 0.0.0.0:$PORT 
